@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El Campamento del Tío Rich 2.0</title>
+<style>
+  html, body {
+    margin:0; padding:0;
+    font-family: 'Arial', sans-serif;
+    height:100%; background:#000; color:#fff;
+    overflow:hidden;
+  }
+
+  /* Loader estilo Netflix */
+  #loader {
+    position:fixed; top:0; left:0;
+    width:100%; height:100%;
+    background:#000; display:flex;
+    flex-direction:column; justify-content:center;
+    align-items:center; z-index:9999;
+  }
+  #loader-title { font-size:2.5rem; color:#fff; margin-bottom:50px; }
+  #spark { color:#ff0000; font-weight:bold; animation: sparkEffect 1s infinite; }
+  @keyframes sparkEffect {
+    0%,100%{opacity:1; text-shadow:0 0 5px #ff0000,0 0 10px #ff0000,0 0 20px #ff0000;}
+    10%,30%,50%,70%,90%{opacity:0.3; text-shadow:0 0 2px #ff8800,0 0 5px #ff8800;}
+    20%,40%,60%,80%{opacity:0.6; text-shadow:0 0 8px #ff0000,0 0 15px #ff0000;}
+  }
+  #loader-bar-container {width:300px; height:15px; background:#111; border-radius:8px; overflow:hidden; position:relative;}
+  #loader-bar {width:0; height:100%; background:#ff0000; transition: width 0.03s linear;}
+  #loader-percent {position:absolute; top:0; left:50%; transform:translateX(-50%); color:#fff; font-weight:bold; font-size:1rem;}
+
+  /* Lluvia de fondo */
+  .matrix-canvas {
+    position:absolute; top:0; left:0;
+    width:100%; height:100%;
+    z-index:1; pointer-events:none;
+  }
+
+  /* Overlay con contenido centralizado */
+  .overlay {
+    position:relative; z-index:2;
+    display:flex; flex-direction:column; align-items:center;
+    justify-content:center; text-align:center; padding:20px;
+  }
+
+  h1 { font-size:2.5rem; margin-bottom:10px; }
+  p { font-size:1.2rem; margin:10px 0 20px; }
+  input {padding:12px; margin-top:10px; font-size:1rem; border-radius:8px; border:1px solid #333; width:90%; max-width:300px; background:#111; color:#fff;}
+  
+  /* Botones centrados y animación */
+  .button-group {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    opacity:0;
+    transform: translateY(20px);
+    transition: all 0.5s ease;
+  }
+  .button-group.show {
+    opacity:1;
+    transform: translateY(0);
+  }
+  button {
+    width:220px;
+    padding:12px;
+    font-size:1rem;
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+    transition: 0.3s;
+  }
+  .red-btn {background:#ff0000; color:#fff;}
+  .red-btn:hover{background:#cc0000;}
+  .white-btn {background:#fff; color:#000;}
+  .white-btn:hover{background:#ccc;}
+
+  .hidden{display:none;}
+  .frase {margin-top:20px; font-size:1rem; font-style:italic; opacity:0.9; max-width:80%; animation: moveFrase 5s infinite linear;}
+  @keyframes moveFrase {0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);} }
+  .social {margin-top:20px; display:flex; flex-direction:column; gap:10px; align-items:center;}
+  .social a {color:#fff; text-decoration:none; font-weight:bold; transition:0.3s;}
+  .social a:hover{color:#ccc;}
+  .rojo{color:#ff0000;}
+
+  /* Contador rojo neón */
+  #contador-main,
+  #contador-confirm {
+    font-size: 2rem;
+    color: #ff0000;
+    text-shadow: 
+      0 0 5px #ff0000,
+      0 0 10px #ff0000,
+      0 0 20px #ff0000,
+      0 0 40px #ff0000;
+    font-weight: bold;
+    margin: 10px 0 20px;
+  }
+
+  /* 2.0 parpadeando en rojo en el registro */
+  #spark-main {
+    color:#ff0000;
+    font-weight:bold;
+    animation: sparkEffect 1s infinite;
+  }
+</style>
+</head>
+<body>
+
+<!-- 1. Loader -->
+<div id="loader">
+  <h1 id="loader-title">El Campamento del Tío Rich <span id="spark">2.0</span></h1>
+  <div id="loader-bar-container">
+    <div id="loader-bar"></div>
+    <span id="loader-percent">0%</span>
+  </div>
+</div>
+
+<!-- 2. Apartado principal: Registro -->
+<div id="main-section" class="hidden">
+  <canvas id="matrix-main" class="matrix-canvas"></canvas>
+  <div class="overlay">
+    <h1>El Campamento del Tío Rich <span id="spark-main">2.0</span></h1>
+    <div id="contador-main" class="hidden"></div>
+    <p>Regístrate para unirte al campamento</p>
+    <input type="text" id="usuario" placeholder="Usuario">
+    <input type="email" id="email" placeholder="Email">
+    <div class="button-group" id="buttons-main">
+      <button class="red-btn" onclick="irConfirmacion()">Continuar</button>
+    </div>
+  </div>
+</div>
+
+<!-- 3. Apartado independiente: Confirmación -->
+<div id="confirm-section" class="hidden">
+  <canvas id="matrix-confirm" class="matrix-canvas"></canvas>
+  <div class="overlay">
+    <h1>¿Estás seguro que quieres entrar?</h1>
+    <div id="contador-confirm" class="hidden"></div>
+    <div class="button-group" id="buttons-confirm">
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSdku9Mys6um5W2zIrNizt7hQG6QFNzXZmhIcsn4Gg4hODP4-g/viewform" target="_blank"><button class="red-btn">Quiero entrar</button></a>
+      <button class="white-btn" onclick="volverRegistro()">Cancelar</button>
+      <a href="https://discord.gg/9er7XXCNVq" target="_blank"><button class="red-btn">Unirme a Discord</button></a>
+    </div>
+    <div class="frase" id="frase-inspiradora"></div>
+    <div class="social">
+      <a href="https://www.youtube.com/@ElTiorich-m9s" target="_blank">YouTube</a>
+      <a href="https://www.instagram.com/eltiorich_official/?hl=en" target="_blank">Instagram</a>
+      <a href="https://www.tiktok.com/@eltiorich_official" target="_blank">TikTok</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Loader tipo Netflix
+  window.addEventListener("load", ()=>{
+    const loaderBar = document.getElementById("loader-bar");
+    const loaderPercent = document.getElementById("loader-percent");
+    let progress = 0;
+    setTimeout(()=>{
+      const interval = setInterval(()=>{
+        progress++;
+        loaderBar.style.width = progress+"%";
+        loaderPercent.textContent = progress+"%";
+        if(progress>=100){
+          clearInterval(interval);
+          setTimeout(()=>{
+            document.getElementById("loader").style.display="none";
+            document.getElementById("main-section").classList.remove("hidden");
+            document.getElementById("buttons-main").classList.add("show");
+          },300);
+        }
+      },30);
+    },1000);
+  });
+
+  // Función general para lluvia 010101
+  function iniciarLluvia(canvasId){
+    const canvas = document.getElementById(canvasId);
+    const ctx = canvas.getContext("2d");
+    function resizeCanvas(){canvas.width=window.innerWidth; canvas.height=window.innerHeight;}
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+    const letters="010101";
+    const fontSize=18;
+    const columns=Math.floor(canvas.width/fontSize);
+    const drops=Array(columns).fill(1);
+    function drawMatrix(){
+      ctx.fillStyle="rgba(0,0,0,0.1)";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.font=`${fontSize}px monospace`;
+      ctx.fillStyle="rgba(255,0,0,0.8)";
+      drops.forEach((y,i)=>{
+        const text=letters[Math.floor(Math.random()*letters.length)];
+        ctx.fillText(text,i*fontSize,y*fontSize);
+        if(y*fontSize>canvas.height && Math.random()>0.975) drops[i]=0; else drops[i]++;
+      });
+    }
+    setInterval(drawMatrix,33);
+  }
+  iniciarLluvia("matrix-main");
+  iniciarLluvia("matrix-confirm");
+
+  // Frases inspiradoras
+  const frases = [
+    "El éxito es la suma de pequeños esfuerzos repetidos cada día. – Robert Collier",
+    "No te detengas hasta estar orgulloso. – Desconocido",
+    "Hazlo por el 'yo' que quieres ser. – Desconocido",
+    "Todo lo que siempre quisiste está al otro lado del miedo. – George Addair",
+    "Si fuera fácil, cualquiera lo haría. – Desconocido"
+  ];
+  let fraseIndex=0;
+  function mostrarFrase(){
+    document.getElementById("frase-inspiradora").textContent=frases[fraseIndex];
+    fraseIndex=(fraseIndex+1)%frases.length;
+  }
+  setInterval(mostrarFrase,4000);
+
+  // Navegación entre apartados con animación de botones
+  function irConfirmacion(){
+    document.getElementById("buttons-confirm").classList.remove("show");
+    document.getElementById("main-section").classList.add("hidden");
+    document.getElementById("confirm-section").classList.remove("hidden");
+    setTimeout(()=>{document.getElementById("buttons-confirm").classList.add("show");},50);
+  }
+  function volverRegistro(){
+    document.getElementById("buttons-main").classList.remove("show");
+    document.getElementById("confirm-section").classList.add("hidden");
+    document.getElementById("main-section").classList.remove("hidden");
+    setTimeout(()=>{document.getElementById("buttons-main").classList.add("show");},50);
+  }
+
+  // Contador
+  function startCountdown(id){
+    const countDownDate = new Date("Dec 20, 2025 00:00:00").getTime();
+    const el = document.getElementById(id);
+    el.classList.remove("hidden");
+    const interval = setInterval(()=>{
+      const now = new Date().getTime();
+      const distance = countDownDate - now;
+      if(distance<0){ el.textContent="Evento iniciado"; clearInterval(interval); return; }
+      const days = Math.floor(distance/(1000*60*60*24));
+      const hours = Math.floor((distance%(1000*60*60*24))/(1000*60*60));
+      const minutes = Math.floor((distance%(1000*60*60))/(1000*60));
+      const seconds = Math.floor((distance%(1000*60))/1000);
+      el.textContent=`${days}d ${hours}h ${minutes}m ${seconds}s`;
+    },1000);
+  }
+  startCountdown("contador-main");
+  startCountdown("contador-confirm");
+</script>
+
+</body>
+</html>
